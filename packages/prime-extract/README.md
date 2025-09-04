@@ -1,91 +1,75 @@
 # PrimeNG Component Documentation Extractor
 
-A Node.js scraper tool designed to extract component documentation from the Angular 3rd party library [PrimeNG](https://primeng.org). The tool generates markdown files for each component that serve as quick in-codebase reference documentation for developers or provide implementation context to LLMs and coding assistants.
+A Node.js tool and library to extract component documentation from the Angular 3rd party library [PrimeNG](https://primeng.org). Generates markdown files for each component, providing quick in-codebase reference documentation for developers or implementation context for LLMs and coding assistants.
 
-## 🎯 Purpose
+## 📦 Installation
 
-This project extracts comprehensive documentation for PrimeNG components and converts them into markdown format, making it easy to:
+Install via npm:
 
-- Access component documentation directly within your codebase
-- Provide context to AI coding assistants (GitHub Copilot, etc.)
-- Create offline documentation references
-- Generate custom documentation sites
-- Integrate component information into developer workflows
+```bash
+npm install prime-extract
+```
 
-## 📦 Features
+or with yarn:
+
+```bash
+yarn add prime-extract
+```
+
+## 🚀 Usage
+
+You can use `prime-extract` as a CLI tool or as a Node.js library.
+
+### CLI
+
+Extract all component documentation to the `components/` directory:
+
+```bash
+npx prime-extract
+```
+
+Or, if installed globally:
+
+```bash
+prime-extract
+```
+
+#### CLI Options
+
+- `--output <dir>`: Specify output directory (default: `components/`)
+- `--components <file>`: Path to component list JSON (default: built-in list)
+
+### Node.js API
+
+```js
+const { extractAll } = require('prime-extract');
+
+await extractAll({
+  outputDir: './components',
+  componentList: [
+    { name: 'AutoComplete', path: '/autocomplete' },
+    { name: 'Button', path: '/button' },
+    // ...add or customize components
+  ]
+});
+```
+
+#### API
+
+- `extractAll(options)`
+  - `outputDir` (string): Directory to write markdown files
+  - `componentList` (array): List of `{ name, path }` objects (optional)
+
+## ✨ Features
 
 - **Complete Component Coverage**: Extracts documentation for all PrimeNG components
-- **Structured Output**: Generates well-formatted markdown files with consistent structure
+- **Structured Output**: Well-formatted markdown files with consistent structure
 - **API Documentation**: Includes properties, events, methods, and templates
 - **Code Examples**: Preserves implementation examples from the official documentation
 - **Theming Information**: Extracts CSS classes and design tokens
 - **Table Data**: Preserves API tables in markdown format
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js (v14 or higher)
-- npm or yarn
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/daltonspinas/prime-extract.git
-cd prime-extract
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-### Usage
-
-Run the scraper to extract all component documentation:
-
-```bash
-node scraper.js
-```
-
-The tool will:
-1. Read the component list from `component-list.json`
-2. Scrape each component's documentation from primeng.org
-3. Generate markdown files in the `components/` directory
-
-## 📁 Project Structure
-
-```
-prime-extract/
-├── README.md                 # This file
-├── package.json             # Node.js dependencies
-├── component-list.json      # List of PrimeNG components to scrape
-├── scraper.js              # Main scraper script
-└── components/             # Generated markdown files
-    ├── autocomplete.md
-    ├── button.md
-    ├── table.md
-    └── ... (all PrimeNG components)
-```
-
-## 🔧 Configuration
-
-### Component List
-
-The `component-list.json` file contains the mapping of component names to their URL paths:
-
-```json
-[
-  { "name": "AutoComplete", "path": "/autocomplete" },
-  { "name": "Button", "path": "/button" },
-  { "name": "Table", "path": "/table" }
-]
-```
-
-To add or remove components, simply modify this file.
-
-### Output Format
+## 📖 Output Format
 
 Each generated markdown file includes:
 
@@ -96,9 +80,7 @@ Each generated markdown file includes:
 - **Theming**: CSS classes and design tokens
 - **Code Examples**: Implementation samples
 
-## 📖 Generated Documentation Structure
-
-Each component markdown file follows this structure:
+Example structure:
 
 ```markdown
 # ComponentName
@@ -128,22 +110,40 @@ Brief description of the component.
 
 ## 🔍 Example Use Cases
 
-### Developer Reference
-```bash
-# Quick lookup of AutoComplete properties
-cat components/autocomplete.md | grep "Property"
-```
+- **Developer Reference**: Quickly look up component properties and usage.
+- **AI Assistant Context**: Provide component docs to LLMs or Copilot.
+- **Documentation Site**: Use markdown files as a source for custom docs.
 
-### AI Assistant Context
-Include component documentation in your prompts:
-```
-Based on this PrimeNG Table documentation:
-[paste components/table.md content]
+## 🛠️ Technical Details
 
-Help me implement a data table with sorting and filtering.
-```
+- **axios**: HTTP client for scraping web pages
+- **cheerio**: Server-side jQuery implementation for HTML parsing
 
-### Documentation Site
+The extraction process:
+1. Loads component URLs (default or custom list)
+2. Fetches HTML from primeng.org
+3. Parses DOM with cheerio
+4. Extracts structured data (sections, tables, code blocks)
+5. Converts to markdown
+6. Writes individual component files
+
+## 🤝 Contributing
+
+Pull requests and issues are welcome! Please open an issue or PR for bugs, improvements, or new features.
+
+## 📝 License
+
+MIT
+
+## ⚠️ Disclaimer
+
+This tool is for educational and development purposes. Respect the terms of service of the websites you scrape and consider server load.
+
+## 🔗 Related Links
+
+- [PrimeNG Official Documentation](https://primeng.org)
+- [PrimeNG GitHub Repository](https://github.com/primefaces/primeng)
+- [Angular Documentation](https://angular.io)
 Use the markdown files to generate custom documentation:
 ```javascript
 // Example: Convert to HTML for documentation site
