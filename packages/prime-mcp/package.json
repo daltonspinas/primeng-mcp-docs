@@ -1,6 +1,52 @@
 {
-  "name": "prime-mcp",
-  "version": "0.1.0",
-  "main": "index.js",
-  "dependencies": {}
+  "name": "@daltonspinas/primeng-mcp",
+  "version": "1.0.0",
+  "description": "Model Context Protocol server for PrimeNG Angular component documentation",
+  "main": "dist/index.js",
+  "bin": {
+    "primeng-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepare": "npm run build",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "primeng",
+    "angular",
+    "mcp",
+    "model-context-protocol",
+    "documentation",
+    "ai",
+    "llm"
+  ],
+  "author": "Dalton Spinas",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/daltonspinas/primeng-mcp-docs.git",
+    "directory": "packages/prime-mcp"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "mcp": {
+    "server": {
+      "name": "primeng-mcp",
+      "description": "PrimeNG Angular component documentation server for LLM assistance",
+      "version": "1.0.0"
+    }
+  }
 }
