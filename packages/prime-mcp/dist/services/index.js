@@ -22,36 +22,27 @@ class PrimeNGMCPServer {
             return {
                 tools: [
                     {
-                        name: "get_usage_guide",
-                        description: "Get instructions on how to properly use the PrimeNG documentation tools. **ALWAYS CALL THIS FIRST** if you're unsure about the workflow.",
-                        inputSchema: {
-                            type: "object",
-                            properties: {},
-                            required: [],
-                        },
-                    },
-                    {
-                        name: "search_primeng_components",
-                        description: "Search and browse all available PrimeNG components with their descriptions. **RECOMMENDED WORKFLOW: Call this FIRST to discover components, then use get_primeng_component_docs with exact component names.** Returns component names, purposes, and brief descriptions.",
+                        name: "list_all_primeng_components",
+                        description: "**ALWAYS CALL THIS FIRST** - Shows all available PrimeNG components with descriptions. Returns the exact component names needed for get_primeng_component_docs. This eliminates guessing and ensures you use valid component names.",
                         inputSchema: {
                             type: "object",
                             properties: {
-                                query: {
+                                filter: {
                                     type: "string",
-                                    description: "Optional search query to filter components by name or functionality. Leave empty to get all components.",
+                                    description: "Optional filter to search components by name or functionality. Leave empty to see all components.",
                                 },
                             },
                         },
                     },
                     {
                         name: "get_primeng_component_docs",
-                        description: "Get the complete documentation for a specific PrimeNG component including API, examples, properties, methods, and styling information. **USAGE: Call search_primeng_components first to see available components, then use the exact component name from that list.**",
+                        description: "Get complete documentation for a PrimeNG component. **Must use exact component name from list_all_primeng_components.** This will fail if you guess the component name or use incorrect capitalization.",
                         inputSchema: {
                             type: "object",
                             properties: {
                                 component: {
                                     type: "string",
-                                    description: "Exact component name from the search_primeng_components result (case-sensitive). Examples: 'Button', 'DataTable', 'Dialog'",
+                                    description: "Exact component name from list_all_primeng_components (case-sensitive). Copy directly from the list to ensure accuracy.",
                                 },
                             },
                             required: ["component"],
@@ -65,10 +56,8 @@ class PrimeNGMCPServer {
             const { name, arguments: args } = request.params;
             try {
                 switch (name) {
-                    case "get_usage_guide":
-                        return await this.handleGetUsageGuide();
-                    case "search_primeng_components":
-                        return await this.handleSearchComponents(args?.query);
+                    case "list_all_primeng_components":
+                        return await this.handleListAllComponents(args?.filter);
                     case "get_primeng_component_docs":
                         return await this.handleGetComponent(args?.component);
                     default:
@@ -86,20 +75,12 @@ class PrimeNGMCPServer {
         this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
             const components = await this.documentationService.getAllComponents();
             return {
-                resources: [
-                    {
-                        uri: "primeng://usage-guide",
-                        name: "PrimeNG MCP Usage Guide",
-                        description: "Instructions for properly using the PrimeNG documentation tools",
-                        mimeType: "text/markdown",
-                    },
-                    ...components.map((component) => ({
-                        uri: `primeng://${component.filename}`,
-                        mimeType: "text/markdown",
-                        name: `PrimeNG ${component.name} component`,
-                        description: component.description,
-                    })),
-                ],
+                resources: components.map((component) => ({
+                    uri: `primeng://${component.filename}`,
+                    mimeType: "text/markdown",
+                    name: `PrimeNG ${component.name} component`,
+                    description: component.description,
+                })),
             };
         });
         // Read resources
@@ -107,52 +88,6 @@ class PrimeNGMCPServer {
             const { uri } = request.params;
             if (!uri.startsWith("primeng://")) {
                 throw new McpError(ErrorCode.InvalidRequest, `Unsupported URI scheme: ${uri}`);
-            }
-            if (uri === "primeng://usage-guide") {
-                return {
-                    contents: [
-                        {
-                            uri,
-                            mimeType: "text/markdown",
-                            text: `# PrimeNG Documentation MCP Usage Guide
-
-## Recommended Workflow
-
-### 1. Discovery Phase
-Call \`search_primeng_components\` to see all available components:
-- Without query: Get complete list of all components
-- With query: Filter components by functionality or name
-
-### 2. Selection Phase
-Find the component you need from the search results.
-Note the **exact component name** (case-sensitive).
-
-### 3. Documentation Phase
-Call \`get_primeng_component_docs\` with the exact component name from step 2.
-
-## Example Usage
-
-\`\`\`
-1. search_primeng_components() → See "Button", "DataTable", "Calendar", etc.
-2. get_primeng_component_docs("DataTable") → Get full DataTable documentation
-\`\`\`
-
-## Common Mistakes to Avoid
-
-❌ **Don't guess component names** - Always use search first
-❌ **Don't skip the search step** - Even if you think you know the name
-❌ **Don't ignore case sensitivity** - Use exact capitalization from search results
-
-## Pro Tips
-
-✅ **Start broad, then narrow** - Search without query first, then with specific terms
-✅ **Use exact names** - Copy component names directly from search results
-✅ **Check descriptions** - Search results include brief descriptions to help choose the right component
-
-This workflow ensures you get accurate, comprehensive documentation every time.`,
-                        },
-                    ],
-                };
             }
             const componentName = uri.replace("primeng://", "");
             try {
@@ -172,81 +107,50 @@ This workflow ensures you get accurate, comprehensive documentation every time.`
             }
         });
     }
-    async handleGetUsageGuide() {
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: `# PrimeNG Documentation MCP Usage Guide
-
-## 🎯 Recommended Workflow
-
-### 1. **Discovery Phase**
-Call \`search_primeng_components\` to see all available components:
-- **Without query**: Get complete list of all components
-- **With query**: Filter components by functionality or name
-
-### 2. **Selection Phase**
-Find the component you need from the search results.
-Note the **exact component name** (case-sensitive).
-
-### 3. **Documentation Phase**
-Call \`get_primeng_component_docs\` with the exact component name from step 2.
-
-## 📋 Example Usage
-
-\`\`\`
-1. search_primeng_components() → See "Button", "DataTable", "Calendar", etc.
-2. get_primeng_component_docs("DataTable") → Get full DataTable documentation
-\`\`\`
-
-## ❌ Common Mistakes to Avoid
-
-- **Don't guess component names** - Always use search first
-- **Don't skip the search step** - Even if you think you know the name  
-- **Don't ignore case sensitivity** - Use exact capitalization from search results
-
-## ✅ Pro Tips
-
-- **Start broad, then narrow** - Search without query first, then with specific terms
-- **Use exact names** - Copy component names directly from search results
-- **Check descriptions** - Search results include brief descriptions to help choose the right component
-
-This workflow ensures you get accurate, comprehensive documentation every time!`,
-                },
-            ],
-        };
-    }
-    async handleSearchComponents(query) {
+    async handleListAllComponents(filter) {
         const allComponents = await this.documentationService.getAllComponents();
-        const results = query
-            ? await this.documentationService.searchComponents(query)
+        const results = filter
+            ? await this.documentationService.searchComponents(filter)
             : allComponents;
         if (results.length === 0) {
             return {
                 content: [
                     {
                         type: "text",
-                        text: query
-                            ? `No PrimeNG components found matching "${query}". Try a different search term or use search_primeng_components without a query to see all available components.`
-                            : "No PrimeNG components available.",
+                        text: filter
+                            ? `❌ **No PrimeNG components found matching "${filter}"**
+
+**Try again with:** \`list_all_primeng_components\` (without filter) to see all ${allComponents.length} available components.
+
+**Or use a broader search term** like "input", "table", "button", "dialog", etc.`
+                            : "❌ **No PrimeNG components available.**",
                     },
                 ],
             };
         }
         const componentList = results
-            .map((comp) => `**${comp.name}**\n  ${comp.description || "PrimeNG component"}`)
-            .join("\n\n");
-        const searchInfo = query
-            ? `Found ${results.length} PrimeNG component(s) matching "${query}":`
-            : `All available PrimeNG components (${results.length} total):`;
+            .map((comp) => `**${comp.name}** - ${comp.description || "PrimeNG component"}`)
+            .join("\n");
+        const headerInfo = filter
+            ? `🔍 **Found ${results.length} PrimeNG component(s) matching "${filter}":**`
+            : `📚 **All Available PrimeNG Components (${results.length} total):**`;
+        const validNames = results.map((c) => c.name).join(", ");
         return {
             content: [
                 {
                     type: "text",
-                    text: `${searchInfo}\n\n${componentList}\n\n**Next step:** Use \`get_primeng_component_docs\` with the exact component name to get full documentation.
+                    text: `${headerInfo}
 
-**Example:** \`get_primeng_component_docs("Button")\``,
+${componentList}
+
+## 🎯 Next Step
+Use \`get_primeng_component_docs\` with the **exact component name** from above.
+
+**Valid component names:** ${validNames}
+
+**Example:** \`get_primeng_component_docs("Button")\`
+
+⚠️ **Important:** Component names are case-sensitive. Copy them exactly as shown above.`,
                 },
             ],
         };
@@ -259,9 +163,13 @@ This workflow ensures you get accurate, comprehensive documentation every time!`
                         type: "text",
                         text: `❌ **Component name is required**
 
-**Next step:** Call \`search_primeng_components\` to see all available components, then use the exact component name from that list.
+**REQUIRED FIRST STEP:** Call \`list_all_primeng_components\` to see all available component names.
 
-**Tip:** Use \`get_usage_guide\` for complete workflow instructions.`,
+**Then:** Use \`get_primeng_component_docs\` with an exact component name from the list.
+
+**Example workflow:**
+1. \`list_all_primeng_components\` → See available components
+2. \`get_primeng_component_docs("Button")\` → Get Button documentation`,
                     },
                 ],
             };
@@ -279,25 +187,44 @@ This workflow ensures you get accurate, comprehensive documentation every time!`
         }
         catch (error) {
             const allComponents = await this.documentationService.getAllComponents();
-            const availableNames = allComponents
-                .map((c) => c.name)
-                .slice(0, 10)
-                .join(", ");
-            const totalCount = allComponents.length;
+            const exactMatches = allComponents.filter((c) => c.name.toLowerCase() === componentName.toLowerCase());
+            if (exactMatches.length > 0) {
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: `❌ **Component "${componentName}" not found - Case sensitivity error**
+
+**Correct name:** "${exactMatches[0].name}"
+
+**Try again with:** \`get_primeng_component_docs("${exactMatches[0].name}")\`
+
+⚠️ **Component names are case-sensitive.** Use the exact capitalization from \`list_all_primeng_components\`.`,
+                        },
+                    ],
+                };
+            }
+            const similarComponents = allComponents
+                .filter((c) => c.name.toLowerCase().includes(componentName.toLowerCase()))
+                .slice(0, 5)
+                .map((c) => c.name);
             return {
                 content: [
                     {
                         type: "text",
                         text: `❌ **Component "${componentName}" not found**
 
-**Available components** (${totalCount} total): ${availableNames}${totalCount > 10 ? ", ..." : ""}
+**SOLUTION:** Call \`list_all_primeng_components\` to see the complete list of valid component names.
 
-**Recommended workflow:**
-1. Call \`search_primeng_components\` to see the full list with descriptions
-2. Find your component in the results
-3. Use the exact component name (case-sensitive)
+**The component name must match EXACTLY** (including capitalization) from that list.
 
-**Tip:** Use \`get_usage_guide\` for complete instructions.`,
+${similarComponents.length > 0
+                            ? `**Did you mean:** ${similarComponents.join(", ")}?`
+                            : "**Example valid names:** Button, DataTable, Calendar, Dialog, InputText"}
+
+**Correct workflow:**
+1. \`list_all_primeng_components\` → Get all valid component names
+2. \`get_primeng_component_docs("ExactName")\` → Use exact name from the list`,
                     },
                 ],
             };
