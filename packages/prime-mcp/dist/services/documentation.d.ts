@@ -17,6 +17,10 @@ export declare class DocumentationService {
      */
     private loadComponentList;
     /**
+     * Extract component description from the markdown file
+     */
+    private extractComponentDescription;
+    /**
      * Format component name for display (e.g., "autocomplete" -> "AutoComplete")
      */
     private formatComponentName;
@@ -27,7 +31,7 @@ export declare class DocumentationService {
     /**
      * Search components by name or description
      */
-    searchComponents(query: string): Promise<ComponentInfo[]>;
+    searchComponents(query?: string): Promise<ComponentInfo[]>;
     /**
      * Get component documentation by name (supports both formatted name and filename)
      */

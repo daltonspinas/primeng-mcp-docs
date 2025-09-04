@@ -28,21 +28,59 @@ export class DocumentationService {
     async loadComponentList() {
         try {
             const files = await fs.readdir(this.componentsPath);
-            this.componentList = files
-                .filter((file) => file.endsWith(".md"))
-                .map((file) => {
+            this.componentList = [];
+            for (const file of files.filter((f) => f.endsWith(".md"))) {
                 const name = path.basename(file, ".md");
-                return {
+                const description = await this.extractComponentDescription(file);
+                this.componentList.push({
                     name: this.formatComponentName(name),
                     filename: file,
-                    description: `PrimeNG ${this.formatComponentName(name)} component documentation`,
-                };
-            })
-                .sort((a, b) => a.name.localeCompare(b.name));
+                    description,
+                });
+            }
+            this.componentList.sort((a, b) => a.name.localeCompare(b.name));
         }
         catch (error) {
             console.error("Failed to load component list:", error);
             throw new Error(`Cannot access components directory: ${this.componentsPath}`);
+        }
+    }
+    /**
+     * Extract component description from the markdown file
+     */
+    async extractComponentDescription(filename) {
+        try {
+            const filePath = path.join(this.componentsPath, filename);
+            const content = await fs.readFile(filePath, "utf-8");
+            // Extract the first paragraph after the title
+            // Look for the pattern: # Title\n\nDescription paragraph
+            const lines = content.split("\n");
+            let titleFound = false;
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                // Skip the title line (starts with #)
+                if (line.startsWith("# ") && !titleFound) {
+                    titleFound = true;
+                    continue;
+                }
+                // Skip empty lines
+                if (!line)
+                    continue;
+                // If we found the title and this is not another heading or table of contents
+                if (titleFound &&
+                    !line.startsWith("#") &&
+                    !line.toLowerCase().includes("table of contents")) {
+                    return line;
+                }
+            }
+            // Fallback description
+            const componentName = this.formatComponentName(path.basename(filename, ".md"));
+            return `${componentName} is a PrimeNG component.`;
+        }
+        catch (error) {
+            console.error(`Failed to extract description for ${filename}:`, error);
+            const componentName = this.formatComponentName(path.basename(filename, ".md"));
+            return `${componentName} is a PrimeNG component.`;
         }
     }
     /**
@@ -123,10 +161,10 @@ export class DocumentationService {
      */
     async searchComponents(query) {
         const components = await this.getAllComponents();
-        const normalizedQuery = query.toLowerCase().trim();
-        if (!normalizedQuery) {
+        if (!query || !query.trim()) {
             return components;
         }
+        const normalizedQuery = query.toLowerCase().trim();
         return components.filter((component) => component.name.toLowerCase().includes(normalizedQuery) ||
             component.filename.toLowerCase().includes(normalizedQuery) ||
             (component.description &&
