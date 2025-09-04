@@ -25,6 +25,19 @@ class PrimeNGMCPServer {
           resources: {},
           tools: {},
         },
+        instructions: `<General Purpose>
+              This server provides documenation for the PrimeNG UI component library for Angular.
+              It can list all available PrimeNG components and provide detailed documentation for each component.
+              Use the tools to explore and retrieve component information as needed.
+              </General Purpose>
+              <Core Workflows & Tool Guide>
+* **1. Discover Available Components (Mandatory First Step):** Always begin by calling
+  \`list_all_primeng_components\` to get the names and descriptions for all the components. This context is needed to interpret the user's request and discover the needed web components from PrimeNG library. The outputs from this tool are often
+  required inputs for other tools.
+
+* **2. Write & Modify Code:** Before writing or changing code, you MUST consult the
+  \`get_primeng_component_docs\` tool to get the full implementation details for the given component. The request might require multiple different components, use this tool as many times as needed for each component.              
+              `
       }
     );
 
