@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const axios = require("axios");
 const cheerio = require("cheerio");
 const fs = require("fs");
@@ -225,7 +226,8 @@ function extractThemingSection($, themingSection) {
 
 // Parse output directory from command line arguments
 const argv = process.argv.slice(2);
-let outDir = path.join(__dirname, "components");
+// Use process.cwd() as the default output directory
+let outDir = path.join(process.cwd(), "components");
 if (argv[0]) {
   outDir = path.resolve(argv[0]);
 }
